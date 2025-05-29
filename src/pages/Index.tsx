@@ -4,6 +4,7 @@ import { WeatherInput } from '@/components/WeatherInput';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { WalkingRecommendations } from '@/components/WalkingRecommendations';
 import { useWeatherData } from '@/hooks/useWeatherData';
+import AuthButton from '@/components/AuthButton';
 
 const Index = () => {
   const [zipCode, setZipCode] = useState('');
@@ -17,6 +18,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-end mb-4">
+          <AuthButton />
+        </div>
+        
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
             🐕 Pup Walk Weather 🌤️

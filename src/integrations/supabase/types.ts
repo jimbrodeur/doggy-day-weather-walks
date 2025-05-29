@@ -14,18 +14,21 @@ export type Database = {
           created_at: string
           dog_name: string | null
           id: string
+          user_id: string | null
           zip_code: string | null
         }
         Insert: {
           created_at?: string
           dog_name?: string | null
           id?: string
+          user_id?: string | null
           zip_code?: string | null
         }
         Update: {
           created_at?: string
           dog_name?: string | null
           id?: string
+          user_id?: string | null
           zip_code?: string | null
         }
         Relationships: []
