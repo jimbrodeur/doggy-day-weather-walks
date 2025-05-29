@@ -29,6 +29,25 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
         🐕 Best Walking Times Today
       </h2>
       
+      {/* Score Legend */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h3 className="font-semibold text-gray-800 mb-3 text-center">📊 Walking Score Guide</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-green-500 rounded"></div>
+            <span><strong>80-100:</strong> Excellent - Perfect conditions!</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+            <span><strong>60-79:</strong> Good - Great for walking</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-red-500 rounded"></div>
+            <span><strong>0-59:</strong> Fair/Poor - Consider alternatives</span>
+          </div>
+        </div>
+      </div>
+      
       <div className="space-y-4">
         {recommendations.map((rec, index) => (
           <div 
