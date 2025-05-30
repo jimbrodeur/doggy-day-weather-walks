@@ -1,73 +1,30 @@
-# Welcome to your Lovable project
+# Dog Walk Weather App 🐶 ☀️
+
+This project was built using Supabase and Lovable as part of my onboarding at [Supabase].
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/2cfb51f9-7a68-484f-9413-345dbf2ee5ea
+**URL**: https://doggy-day-weather-walks.lovable.app
 
-## How can I edit this code?
+## This app allows users to:
+  * Get the best time of day to walk their dog based on the local weather.
+  * Sign up to save their dog's name(s) and zip code.
+  * Comment on the walk or view realtime comments from people within their zip code during that walking day.
+  * Search by zip code, region, or current location for that days walking weather.
 
-There are several ways of editing your application.
+## Built with:
+  * [Supabase] - Backend - (https://supabase.com)
+     * Auth for sign-up, login, and authentication.
+     * Database to store user profiles and comments.
+     * Reatime to stream live comments from users in the same area.
+  * [Lovable] - Frontend - (https://www.lovable.dev)
+     * Prompts to build front end, API integration, and connection to Supabase
+  * [Weather api] - (https://www.weatherapi.com)
+     * Provides current local weather for entered zip code/region
 
-**Use Lovable**
+## ⚠️ Disclaimer
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2cfb51f9-7a68-484f-9413-345dbf2ee5ea) and start prompting.
+This app was created as a project to explore Supabase and Lovable. It is intended for general informational purposes only.
 
-Changes made via Lovable will be committed automatically to this repo.
+Please use your own judgment and check local conditions before taking your dog for a walk. Weather data may not always reflect real-time changes in your area.
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/2cfb51f9-7a68-484f-9413-345dbf2ee5ea) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
