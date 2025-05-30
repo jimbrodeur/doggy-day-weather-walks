@@ -8,15 +8,15 @@ export const useWeatherData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchWeather = async (zipCode: string) => {
+  const fetchWeather = async (location: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      const data = await weatherService.getWeatherByZip(zipCode);
+      const data = await weatherService.getWeatherByLocation(location);
       setWeatherData(data);
     } catch (err) {
-      setError('Unable to fetch weather data. Please check your zip code and try again.');
+      setError('Unable to fetch weather data. Please check your location and try again.');
       console.error('Weather fetch error:', err);
     } finally {
       setLoading(false);

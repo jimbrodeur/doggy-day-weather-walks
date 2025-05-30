@@ -7,21 +7,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface WeatherInputProps {
-  onSubmit: (zipCode: string) => void;
+  onSubmit: (location: string) => void;
   loading: boolean;
 }
 
 export const WeatherInput: React.FC<WeatherInputProps> = ({ onSubmit, loading }) => {
-  const [zipCode, setZipCode] = useState('');
+  const [location, setLocation] = useState('');
   const [locationLoading, setLocationLoading] = useState(false);
   const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (zipCode.trim()) {
-      onSubmit(zipCode.trim());
+    if (location.trim()) {
+      onSubmit(location.trim());
       
-      // Save zip code to user profile if logged in
+      // Save location to user profile if logged in
       if (user) {
         try {
           const { data: existingUser } = await supabase
@@ -33,18 +33,18 @@ export const WeatherInput: React.FC<WeatherInputProps> = ({ onSubmit, loading })
           if (existingUser) {
             await supabase
               .from('user_table')
-              .update({ zip_code: zipCode.trim() })
+              .update({ zip_code: location.trim() })
               .eq('user_id', user.id);
           } else {
             await supabase
               .from('user_table')
               .insert({ 
                 user_id: user.id, 
-                zip_code: zipCode.trim() 
+                zip_code: location.trim() 
               });
           }
         } catch (error) {
-          console.error('Error saving zip code:', error);
+          console.error('Error saving location:', error);
         }
       }
     }
@@ -60,7 +60,7 @@ export const WeatherInput: React.FC<WeatherInputProps> = ({ onSubmit, loading })
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          // Use reverse geocoding to get zip code from coordinates
+          // Use reverse geocoding to get location from coordinates
           const { latitude, longitude } = position.coords;
           const response = await fetch(
             `https://api.weatherapi.com/v1/current.json?key=31256404362c4ef5b51180059253005&q=${latitude},${longitude}`
@@ -68,23 +68,23 @@ export const WeatherInput: React.FC<WeatherInputProps> = ({ onSubmit, loading })
           
           if (response.ok) {
             const data = await response.json();
-            // Extract zip code from the location data or use a default format
-            const locationZip = data.location.region || data.location.name;
-            setZipCode(locationZip);
-            onSubmit(locationZip);
+            // Use city, state format for better user experience
+            const locationString = `${data.location.name}, ${data.location.region}`;
+            setLocation(locationString);
+            onSubmit(locationString);
           } else {
             throw new Error('Failed to get location data');
           }
         } catch (error) {
           console.error('Error getting location:', error);
-          alert('Unable to get your location. Please enter your zip code manually.');
+          alert('Unable to get your location. Please enter your location manually.');
         } finally {
           setLocationLoading(false);
         }
       },
       (error) => {
         console.error('Geolocation error:', error);
-        alert('Unable to access your location. Please enter your zip code manually.');
+        alert('Unable to access your location. Please enter your location manually.');
         setLocationLoading(false);
       },
       {
@@ -100,15 +100,15 @@ export const WeatherInput: React.FC<WeatherInputProps> = ({ onSubmit, loading })
       <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
         <Input
           type="text"
-          placeholder="Enter your zip code"
-          value={zipCode}
-          onChange={(e) => setZipCode(e.target.value)}
+          placeholder="Enter zip code or city, state"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
           className="flex-1"
           disabled={loading}
         />
         <Button 
           type="submit" 
-          disabled={loading || !zipCode.trim()}
+          disabled={loading || !location.trim()}
           className="bg-blue-600 hover:bg-blue-700"
         >
           {loading ? (

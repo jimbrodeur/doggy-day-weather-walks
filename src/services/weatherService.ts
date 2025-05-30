@@ -1,31 +1,30 @@
-
 import { WeatherData } from '@/types/weather';
 
 const API_KEY = '31256404362c4ef5b51180059253005';
 const BASE_URL = 'https://api.weatherapi.com/v1';
 
 export const weatherService = {
-  async getWeatherByZip(zipCode: string): Promise<WeatherData> {
+  async getWeatherByLocation(location: string): Promise<WeatherData> {
     try {
-      // Get current weather and forecast data
+      // The WeatherAPI can handle zip codes, city names, and "city, state" format
       const response = await fetch(
-        `${BASE_URL}/forecast.json?key=${API_KEY}&q=${zipCode}&days=1&aqi=no&alerts=no`
+        `${BASE_URL}/forecast.json?key=${API_KEY}&q=${encodeURIComponent(location)}&days=1&aqi=no&alerts=no`
       );
       
       if (!response.ok) {
         if (response.status === 400) {
-          throw new Error('Invalid zip code');
+          throw new Error('Invalid location. Please try a zip code or city, state format.');
         }
         throw new Error('Failed to fetch weather data');
       }
       
       const data = await response.json();
       const current = data.current;
-      const location = data.location;
+      const locationData = data.location;
       const forecast = data.forecast.forecastday[0];
 
       return {
-        location: `${location.name}, ${location.region}`,
+        location: `${locationData.name}, ${locationData.region}`,
         temperature: Math.round(current.temp_f),
         condition: this.mapWeatherCondition(current.condition.text),
         humidity: current.humidity,
@@ -36,8 +35,13 @@ export const weatherService = {
       };
     } catch (error) {
       console.error('Weather fetch error:', error);
-      throw new Error('Unable to fetch weather data. Please check your zip code and try again.');
+      throw new Error('Unable to fetch weather data. Please check your location and try again.');
     }
+  },
+
+  // Keep the old method for backward compatibility
+  async getWeatherByZip(zipCode: string): Promise<WeatherData> {
+    return this.getWeatherByLocation(zipCode);
   },
 
   mapWeatherCondition(condition: string): string {
