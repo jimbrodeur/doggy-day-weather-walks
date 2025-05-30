@@ -1,57 +1,38 @@
 
 import { WeatherData } from '@/types/weather';
 
-const API_KEY = process.env.OPENWEATHER_API_KEY || 'demo'; // You'll need to set this
-const BASE_URL = 'https://api.openweathermap.org/data/2.5';
-const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
+const API_KEY = '31256404362c4ef5b51180059253005';
+const BASE_URL = 'https://api.weatherapi.com/v1';
 
 export const weatherService = {
   async getWeatherByZip(zipCode: string): Promise<WeatherData> {
     try {
-      // If no API key, fall back to demo data
-      if (API_KEY === 'demo') {
-        return this.getDemoWeatherData(zipCode);
-      }
-
-      // Get coordinates and location info from zip code
-      const geoResponse = await fetch(
-        `${GEO_URL}/zip?zip=${zipCode},US&appid=${API_KEY}`
+      // Get current weather and forecast data
+      const response = await fetch(
+        `${BASE_URL}/forecast.json?key=${API_KEY}&q=${zipCode}&days=1&aqi=no&alerts=no`
       );
       
-      if (!geoResponse.ok) {
-        throw new Error('Invalid zip code');
-      }
-      
-      const geoData = await geoResponse.json();
-      const { lat, lon, name, state } = geoData;
-
-      // Get current weather
-      const weatherResponse = await fetch(
-        `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`
-      );
-      
-      if (!weatherResponse.ok) {
+      if (!response.ok) {
+        if (response.status === 400) {
+          throw new Error('Invalid zip code');
+        }
         throw new Error('Failed to fetch weather data');
       }
       
-      const weatherData = await weatherResponse.json();
-
-      // Get hourly forecast
-      const forecastResponse = await fetch(
-        `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`
-      );
-      
-      const forecastData = forecastResponse.ok ? await forecastResponse.json() : null;
+      const data = await response.json();
+      const current = data.current;
+      const location = data.location;
+      const forecast = data.forecast.forecastday[0];
 
       return {
-        location: `${name}, ${state}`,
-        temperature: Math.round(weatherData.main.temp),
-        condition: this.mapWeatherCondition(weatherData.weather[0].main),
-        humidity: weatherData.main.humidity,
-        windSpeed: Math.round(weatherData.wind.speed),
-        uvIndex: 5, // UV index requires separate API call
-        precipitation: weatherData.rain?.['1h'] ? Math.round(weatherData.rain['1h'] * 100) : 0,
-        hourlyForecast: this.generateHourlyFromForecast(forecastData)
+        location: `${location.name}, ${location.region}`,
+        temperature: Math.round(current.temp_f),
+        condition: this.mapWeatherCondition(current.condition.text),
+        humidity: current.humidity,
+        windSpeed: Math.round(current.wind_mph),
+        uvIndex: current.uv || 0,
+        precipitation: Math.round(current.precip_in * 100) || 0,
+        hourlyForecast: this.generateHourlyFromForecast(forecast.hour)
       };
     } catch (error) {
       console.error('Weather fetch error:', error);
@@ -60,31 +41,36 @@ export const weatherService = {
   },
 
   mapWeatherCondition(condition: string): string {
-    const conditionMap: { [key: string]: string } = {
-      'Clear': 'sunny',
-      'Clouds': 'cloudy',
-      'Rain': 'rainy',
-      'Drizzle': 'rainy',
-      'Thunderstorm': 'rainy',
-      'Snow': 'cloudy',
-      'Mist': 'cloudy',
-      'Fog': 'cloudy'
-    };
-    return conditionMap[condition] || 'partly-cloudy';
+    const lowerCondition = condition.toLowerCase();
+    
+    if (lowerCondition.includes('sunny') || lowerCondition.includes('clear')) {
+      return 'sunny';
+    }
+    if (lowerCondition.includes('rain') || lowerCondition.includes('drizzle') || lowerCondition.includes('shower')) {
+      return 'rainy';
+    }
+    if (lowerCondition.includes('cloud') || lowerCondition.includes('overcast')) {
+      return 'cloudy';
+    }
+    if (lowerCondition.includes('partly') || lowerCondition.includes('partial')) {
+      return 'partly-cloudy';
+    }
+    
+    return 'partly-cloudy';
   },
 
-  generateHourlyFromForecast(forecastData: any) {
-    if (!forecastData?.list) {
+  generateHourlyFromForecast(hourlyData: any[]) {
+    if (!hourlyData || !Array.isArray(hourlyData)) {
       return this.generateMockHourlyForecast();
     }
 
-    return forecastData.list.slice(0, 24).map((item: any, index: number) => {
-      const date = new Date(item.dt * 1000);
+    return hourlyData.map((hour: any) => {
+      const date = new Date(hour.time);
       return {
         time: date.getHours(),
-        temperature: Math.round(item.main.temp),
-        condition: this.mapWeatherCondition(item.weather[0].main),
-        precipitation: item.rain?.['3h'] ? Math.round(item.rain['3h'] * 100 / 3) : 0
+        temperature: Math.round(hour.temp_f),
+        condition: this.mapWeatherCondition(hour.condition.text),
+        precipitation: Math.round(hour.chance_of_rain) || 0
       };
     });
   },
@@ -104,24 +90,5 @@ export const weatherService = {
     }
     
     return hours;
-  },
-
-  async getDemoWeatherData(zipCode: string): Promise<WeatherData> {
-    // Enhanced demo data that's more realistic
-    const mockData = {
-      location: `${zipCode} Area`,
-      temperature: Math.floor(Math.random() * 40) + 40,
-      condition: ['sunny', 'cloudy', 'partly-cloudy', 'rainy'][Math.floor(Math.random() * 4)],
-      humidity: Math.floor(Math.random() * 40) + 30,
-      windSpeed: Math.floor(Math.random() * 15) + 2,
-      uvIndex: Math.floor(Math.random() * 8) + 1,
-      precipitation: Math.random() > 0.7 ? Math.floor(Math.random() * 30) + 5 : 0,
-      hourlyForecast: this.generateMockHourlyForecast()
-    };
-
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return mockData;
   }
 };
