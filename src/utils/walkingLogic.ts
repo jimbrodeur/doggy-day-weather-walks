@@ -80,5 +80,10 @@ export const generateWalkingRecommendations = (weatherData: WeatherData): Walkin
     });
   });
 
-  return recommendations.sort((a, b) => b.score - a.score);
+  // Sort by time (hour) instead of score
+  return recommendations.sort((a, b) => {
+    const timeSlotA = timeSlots.find(slot => slot.time === a.time);
+    const timeSlotB = timeSlots.find(slot => slot.time === b.time);
+    return (timeSlotA?.hour || 0) - (timeSlotB?.hour || 0);
+  });
 };

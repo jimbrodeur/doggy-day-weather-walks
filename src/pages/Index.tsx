@@ -3,12 +3,16 @@ import React, { useState } from 'react';
 import { WeatherInput } from '@/components/WeatherInput';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { WalkingRecommendations } from '@/components/WalkingRecommendations';
+import { CommentsSection } from '@/components/CommentsSection';
+import { DogProfile } from '@/components/DogProfile';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import AuthButton from '@/components/AuthButton';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const [zipCode, setZipCode] = useState('');
   const { weatherData, loading, error, fetchWeather } = useWeatherData();
+  const { user } = useAuth();
 
   const handleZipCodeSubmit = (zip: string) => {
     setZipCode(zip);
@@ -18,7 +22,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-between items-start mb-4">
+          {user && <DogProfile zipCode={zipCode} />}
+          <div className="flex-1"></div>
           <AuthButton />
         </div>
         
@@ -44,6 +50,7 @@ const Index = () => {
             <div className="mt-8 space-y-6">
               <WeatherDisplay weatherData={weatherData} />
               <WalkingRecommendations weatherData={weatherData} />
+              <CommentsSection zipCode={zipCode} />
             </div>
           )}
         </div>
