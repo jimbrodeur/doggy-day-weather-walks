@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin } from 'lucide-react';
+import { MapPin, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WeatherInputProps {
   onSubmit: (zipCode: string) => void;
@@ -11,59 +13,128 @@ interface WeatherInputProps {
 
 export const WeatherInput: React.FC<WeatherInputProps> = ({ onSubmit, loading }) => {
   const [zipCode, setZipCode] = useState('');
-  const [error, setError] = useState('');
+  const [locationLoading, setLocationLoading] = useState(false);
+  const { user } = useAuth();
 
-  const validateZipCode = (zip: string) => {
-    const zipRegex = /^\d{5}(-\d{4})?$/;
-    return zipRegex.test(zip);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (zipCode.trim()) {
+      onSubmit(zipCode.trim());
+      
+      // Save zip code to user profile if logged in
+      if (user) {
+        try {
+          const { data: existingUser } = await supabase
+            .from('user_table')
+            .select('user_id')
+            .eq('user_id', user.id)
+            .single();
+
+          if (existingUser) {
+            await supabase
+              .from('user_table')
+              .update({ zip_code: zipCode.trim() })
+              .eq('user_id', user.id);
+          } else {
+            await supabase
+              .from('user_table')
+              .insert({ 
+                user_id: user.id, 
+                zip_code: zipCode.trim() 
+              });
+          }
+        } catch (error) {
+          console.error('Error saving zip code:', error);
+        }
+      }
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!zipCode.trim()) {
-      setError('Please enter a zip code');
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by this browser.');
       return;
     }
 
-    if (!validateZipCode(zipCode.trim())) {
-      setError('Please enter a valid 5-digit zip code');
-      return;
-    }
-
-    onSubmit(zipCode.trim());
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          // Use reverse geocoding to get zip code from coordinates
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://api.weatherapi.com/v1/current.json?key=31256404362c4ef5b51180059253005&q=${latitude},${longitude}`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            // Extract zip code from the location data or use a default format
+            const locationZip = data.location.region || data.location.name;
+            setZipCode(locationZip);
+            onSubmit(locationZip);
+          } else {
+            throw new Error('Failed to get location data');
+          }
+        } catch (error) {
+          console.error('Error getting location:', error);
+          alert('Unable to get your location. Please enter your zip code manually.');
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        alert('Unable to access your location. Please enter your zip code manually.');
+        setLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    );
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                type="text"
-                placeholder="Enter your zip code (e.g., 90210)"
-                value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
-                className="pl-10 h-12 text-lg"
-                disabled={loading}
-              />
-            </div>
-            {error && (
-              <p className="text-red-500 text-sm mt-2">{error}</p>
-            )}
-          </div>
-          <Button 
-            type="submit" 
-            disabled={loading}
-            className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-          >
-            {loading ? 'Getting Weather...' : 'Get Walking Times'}
-          </Button>
-        </div>
+    <div className="w-full max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
+        <Input
+          type="text"
+          placeholder="Enter your zip code"
+          value={zipCode}
+          onChange={(e) => setZipCode(e.target.value)}
+          className="flex-1"
+          disabled={loading}
+        />
+        <Button 
+          type="submit" 
+          disabled={loading || !zipCode.trim()}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            'Get Weather'
+          )}
+        </Button>
       </form>
+      
+      <div className="text-center">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleUseLocation}
+          disabled={locationLoading || loading}
+          className="flex items-center gap-2"
+        >
+          {locationLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <MapPin className="h-4 w-4" />
+          )}
+          {locationLoading ? 'Getting Location...' : 'Use My Location'}
+        </Button>
+      </div>
     </div>
   );
 };
