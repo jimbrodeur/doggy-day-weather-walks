@@ -4,44 +4,50 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Heart, Plus, X } from 'lucide-react';
+import { Heart, Plus, X, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface DogProfileProps {
   zipCode?: string;
 }
 
+interface DogEntry {
+  id: string;
+  dog_name: string;
+  zip_code?: string;
+}
+
 export const DogProfile: React.FC<DogProfileProps> = ({ zipCode }) => {
-  const [dogNames, setDogNames] = useState<string[]>([]);
+  const [dogEntries, setDogEntries] = useState<DogEntry[]>([]);
   const [newDogName, setNewDogName] = useState('');
+  const [editingDog, setEditingDog] = useState<DogEntry | null>(null);
+  const [editName, setEditName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
-      fetchDogNames();
+      fetchDogEntries();
     }
   }, [user]);
 
-  const fetchDogNames = async () => {
+  const fetchDogEntries = async () => {
     if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('user_table')
-        .select('dog_name')
+        .select('id, dog_name, zip_code')
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      // Extract dog names and filter out empty ones
-      const names = data
-        ?.map(row => row.dog_name)
-        .filter(name => name && name.trim()) || [];
-      
-      setDogNames(names);
+      // Filter out entries with empty dog names
+      const entries = data?.filter(entry => entry.dog_name && entry.dog_name.trim()) || [];
+      setDogEntries(entries);
     } catch (error) {
-      console.error('Error fetching dog names:', error);
+      console.error('Error fetching dog entries:', error);
     }
   };
 
@@ -63,7 +69,7 @@ export const DogProfile: React.FC<DogProfileProps> = ({ zipCode }) => {
 
       setNewDogName('');
       setIsAdding(false);
-      fetchDogNames();
+      fetchDogEntries();
     } catch (error) {
       console.error('Error adding dog:', error);
     } finally {
@@ -71,31 +77,58 @@ export const DogProfile: React.FC<DogProfileProps> = ({ zipCode }) => {
     }
   };
 
-  const handleRemoveDog = async (dogName: string) => {
+  const handleEditDog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDog || !editName.trim()) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_table')
+        .update({ dog_name: editName.trim() })
+        .eq('id', editingDog.id);
+
+      if (error) throw error;
+
+      setEditingDog(null);
+      setEditName('');
+      fetchDogEntries();
+    } catch (error) {
+      console.error('Error updating dog:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveDog = async (dogEntry: DogEntry) => {
     if (!user) return;
 
     try {
       const { error } = await supabase
         .from('user_table')
         .delete()
-        .eq('user_id', user.id)
-        .eq('dog_name', dogName);
+        .eq('id', dogEntry.id);
 
       if (error) throw error;
-      fetchDogNames();
+      fetchDogEntries();
     } catch (error) {
       console.error('Error removing dog:', error);
     }
   };
 
+  const startEdit = (dogEntry: DogEntry) => {
+    setEditingDog(dogEntry);
+    setEditName(dogEntry.dog_name);
+  };
+
   if (!user) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Heart className="h-5 w-5 text-red-500" />
-          <h3 className="font-semibold text-gray-800">My Dogs</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">My Dogs</h3>
         </div>
         {!isAdding && (
           <Button
@@ -110,24 +143,69 @@ export const DogProfile: React.FC<DogProfileProps> = ({ zipCode }) => {
         )}
       </div>
 
-      {dogNames.length === 0 && !isAdding && (
-        <p className="text-gray-500 text-sm text-center py-2">
+      {dogEntries.length === 0 && !isAdding && (
+        <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-2">
           Add your dog's name to personalize your experience!
         </p>
       )}
 
       <div className="space-y-2">
-        {dogNames.map((name, index) => (
-          <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-            <span className="font-medium text-gray-800">🐕 {name}</span>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => handleRemoveDog(name)}
-              className="h-6 w-6 p-0 text-gray-500 hover:text-red-500"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+        {dogEntries.map((dogEntry) => (
+          <div key={dogEntry.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <span className="font-medium text-gray-800 dark:text-gray-200">🐕 {dogEntry.dog_name}</span>
+            <div className="flex gap-1">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => startEdit(dogEntry)}
+                    className="h-6 w-6 p-0 text-gray-500 hover:text-blue-500"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Dog Name</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleEditDog} className="space-y-4">
+                    <Input
+                      type="text"
+                      placeholder="Dog's name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        type="submit"
+                        disabled={loading || !editName.trim()}
+                        className="flex-1"
+                      >
+                        {loading ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setEditingDog(null)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleRemoveDog(dogEntry)}
+                className="h-6 w-6 p-0 text-gray-500 hover:text-red-500"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ))}
 

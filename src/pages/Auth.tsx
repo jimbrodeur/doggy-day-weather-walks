@@ -6,12 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [showResetForm, setShowResetForm] = useState(false);
   const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
 
@@ -52,6 +57,74 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setError(null);
+    setResetMessage(null);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/`,
+      });
+      
+      if (error) throw error;
+      
+      setResetMessage('Password reset email sent! Check your inbox.');
+      setShowResetForm(false);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  if (showResetForm) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+            <CardDescription>Enter your email to receive a password reset link</CardDescription>
+          </CardHeader>
+          
+          <form onSubmit={handleResetPassword}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {error && (
+                <div className="text-red-600 text-sm text-center">{error}</div>
+              )}
+              {resetMessage && (
+                <div className="text-green-600 text-sm text-center">{resetMessage}</div>
+              )}
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-2">
+              <Button type="submit" className="w-full" disabled={resetLoading}>
+                {resetLoading ? 'Sending...' : 'Send Reset Email'}
+              </Button>
+              <Button 
+                type="button"
+                variant="ghost" 
+                onClick={() => setShowResetForm(false)}
+                className="w-full"
+              >
+                Back to Sign In
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -90,6 +163,16 @@ const Auth = () => {
                 {error && (
                   <div className="text-red-600 text-sm text-center">{error}</div>
                 )}
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => setShowResetForm(true)}
+                    className="text-sm text-gray-600"
+                  >
+                    Forgot your password?
+                  </Button>
+                </div>
               </CardContent>
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={loading}>
