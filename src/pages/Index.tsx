@@ -1,18 +1,59 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WeatherInput } from '@/components/WeatherInput';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { WalkingRecommendations } from '@/components/WalkingRecommendations';
 import { CommentsSection } from '@/components/CommentsSection';
 import { DogProfile } from '@/components/DogProfile';
+import { SavedLocations } from '@/components/SavedLocations';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import AuthButton from '@/components/AuthButton';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const [location, setLocation] = useState('');
   const { weatherData, loading, error, fetchWeather } = useWeatherData();
   const { user } = useAuth();
+
+  // Load user's saved zip code when they log in
+  useEffect(() => {
+    const loadUserLocation = async () => {
+      if (user) {
+        try {
+          // First try to get their home location
+          const { data: homeLocation } = await supabase
+            .from('saved_locations')
+            .select('location')
+            .eq('user_id', user.id)
+            .eq('is_home', true)
+            .single();
+
+          if (homeLocation) {
+            setLocation(homeLocation.location);
+            fetchWeather(homeLocation.location);
+            return;
+          }
+
+          // If no home location, try to get their last used zip code
+          const { data: userData } = await supabase
+            .from('user_table')
+            .select('zip_code')
+            .eq('user_id', user.id)
+            .single();
+
+          if (userData?.zip_code) {
+            setLocation(userData.zip_code);
+            fetchWeather(userData.zip_code);
+          }
+        } catch (error) {
+          console.error('Error loading user location:', error);
+        }
+      }
+    };
+
+    loadUserLocation();
+  }, [user]);
 
   const handleLocationSubmit = (loc: string) => {
     setLocation(loc);
@@ -38,6 +79,13 @@ const Index = () => {
         </div>
 
         <div className="max-w-4xl mx-auto">
+          {user && (
+            <SavedLocations 
+              onSelectLocation={handleLocationSubmit}
+              currentLocation={location}
+            />
+          )}
+          
           <WeatherInput onSubmit={handleLocationSubmit} loading={loading} />
           
           {error && (

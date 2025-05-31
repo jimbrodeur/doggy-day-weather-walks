@@ -30,41 +30,41 @@ export const WeatherDisplay: React.FC<WeatherDisplayProps> = ({ weatherData }) =
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">
         Current Weather in {weatherData.location}
       </h2>
       
       <div className="flex flex-col md:flex-row items-center justify-center gap-6">
         <div className="text-center">
           {getWeatherIcon(weatherData.condition)}
-          <p className="text-lg font-semibold text-gray-700 mt-2">
+          <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mt-2">
             {getConditionText(weatherData.condition)}
           </p>
         </div>
         
         <div className="text-center">
-          <div className="text-4xl font-bold text-gray-800">
+          <div className="text-4xl font-bold text-gray-800 dark:text-gray-200">
             {weatherData.temperature}°F
           </div>
         </div>
         
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="font-semibold text-blue-800">Humidity</div>
-            <div className="text-blue-600">{weatherData.humidity}%</div>
+          <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="font-semibold text-blue-800 dark:text-blue-300">Humidity</div>
+            <div className="text-blue-600 dark:text-blue-400">{weatherData.humidity}%</div>
           </div>
-          <div className="text-center p-3 bg-green-50 rounded-lg">
-            <div className="font-semibold text-green-800">Wind</div>
-            <div className="text-green-600">{weatherData.windSpeed} mph</div>
+          <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <div className="font-semibold text-green-800 dark:text-green-300">Wind</div>
+            <div className="text-green-600 dark:text-green-400">{weatherData.windSpeed} mph</div>
           </div>
-          <div className="text-center p-3 bg-orange-50 rounded-lg">
-            <div className="font-semibold text-orange-800">UV Index</div>
-            <div className="text-orange-600">{weatherData.uvIndex}</div>
+          <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+            <div className="font-semibold text-orange-800 dark:text-orange-300">UV Index</div>
+            <div className="text-orange-600 dark:text-orange-400">{weatherData.uvIndex}</div>
           </div>
-          <div className="text-center p-3 bg-purple-50 rounded-lg">
-            <div className="font-semibold text-purple-800">Rain</div>
-            <div className="text-purple-600">{weatherData.precipitation}%</div>
+          <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+            <div className="font-semibold text-purple-800 dark:text-purple-300">Rain</div>
+            <div className="text-purple-600 dark:text-purple-400">{weatherData.precipitation}%</div>
           </div>
         </div>
       </div>
