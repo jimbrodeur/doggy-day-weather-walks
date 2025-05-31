@@ -2,7 +2,7 @@
 import React from 'react';
 import { WeatherData, WalkingRecommendation } from '@/types/weather';
 import { generateWalkingRecommendations } from '@/utils/walkingLogic';
-import { Umbrella } from 'lucide-react';
+import { Umbrella, CloudSun, CloudRain, Sun, Cloudy, CloudSnow, Zap } from 'lucide-react';
 
 interface WalkingRecommendationsProps {
   weatherData: WeatherData;
@@ -22,6 +22,59 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
     if (score >= 60) return 'Good';
     if (score >= 40) return 'Fair';
     return 'Poor';
+  };
+
+  const getWeatherIcon = (condition: string, precipitation: number) => {
+    if (precipitation > 50) {
+      return <CloudRain className="h-5 w-5 text-blue-500" />;
+    }
+    
+    switch (condition.toLowerCase()) {
+      case 'sunny':
+        return <Sun className="h-5 w-5 text-yellow-500" />;
+      case 'partly-cloudy':
+        return <CloudSun className="h-5 w-5 text-yellow-400" />;
+      case 'cloudy':
+        return <Cloudy className="h-5 w-5 text-gray-500" />;
+      case 'rainy':
+        return <CloudRain className="h-5 w-5 text-blue-500" />;
+      case 'snow':
+        return <CloudSnow className="h-5 w-5 text-blue-300" />;
+      case 'thunderstorm':
+        return <Zap className="h-5 w-5 text-purple-500" />;
+      default:
+        return <Sun className="h-5 w-5 text-yellow-500" />;
+    }
+  };
+
+  // Generate weather summary
+  const getWeatherSummary = () => {
+    const avgTemp = Math.round(weatherData.hourlyForecast.reduce((sum, hour) => sum + hour.temperature, 0) / weatherData.hourlyForecast.length);
+    const maxPrecipitation = Math.max(...weatherData.hourlyForecast.map(h => h.precipitation));
+    const hotHours = weatherData.hourlyForecast.filter(h => h.temperature > 80);
+    
+    let summary = `Today's forecast: ${avgTemp}°F average with `;
+    
+    if (maxPrecipitation > 60) {
+      summary += "heavy rain expected ☔";
+    } else if (maxPrecipitation > 30) {
+      summary += "possible showers 🌧️";
+    } else if (maxPrecipitation > 10) {
+      summary += "light rain possible ⛅";
+    } else {
+      summary += "mostly dry conditions ☀️";
+    }
+    
+    // Add walking advice
+    if (hotHours.length > 4) {
+      summary += ". Avoid midday walks due to heat - early morning and evening are best! 🐕";
+    } else if (weatherData.temperature < 32) {
+      summary += ". Bundle up your pup for chilly walks! 🧥";
+    } else {
+      summary += ". Great day for adventures with your furry friend! 🎾";
+    }
+    
+    return summary;
   };
 
   // Check for rain warnings
@@ -44,9 +97,16 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6 text-center">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">
         🐕 Best Walking Times Today
       </h2>
+      
+      {/* Weather Summary */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <p className="text-blue-800 dark:text-blue-300 font-medium text-center">
+          {getWeatherSummary()}
+        </p>
+      </div>
       
       {/* Rain Warning */}
       {hasRainWarnings && getRainMessage() && (
@@ -80,24 +140,32 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
       </div>
       
       <div className="space-y-4">
-        {recommendations.map((rec, index) => (
-          <div 
-            key={index}
-            className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${getScoreColor(rec.score)}`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{rec.icon}</span>
-                <span className="text-lg font-semibold">{rec.time}</span>
+        {recommendations.map((rec, index) => {
+          const hourData = weatherData.hourlyForecast[index] || { precipitation: 0, condition: weatherData.condition };
+          return (
+            <div 
+              key={index}
+              className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${getScoreColor(rec.score)}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  {getWeatherIcon(hourData.condition || weatherData.condition, hourData.precipitation)}
+                  <span className="text-lg font-semibold">{rec.time}</span>
+                  {hourData.precipitation > 20 && (
+                    <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
+                      {hourData.precipitation}% rain
+                    </span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold">{rec.score}</div>
+                  <div className="text-xs font-medium">{getScoreLabel(rec.score)}</div>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold">{rec.score}</div>
-                <div className="text-xs font-medium">{getScoreLabel(rec.score)}</div>
-              </div>
+              <p className="text-sm opacity-90">{rec.reason}</p>
             </div>
-            <p className="text-sm opacity-90">{rec.reason}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
       
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
