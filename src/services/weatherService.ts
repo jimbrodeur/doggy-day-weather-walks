@@ -1,3 +1,4 @@
+
 import { WeatherData } from '@/types/weather';
 
 const API_KEY = '31256404362c4ef5b51180059253005';
@@ -6,9 +7,9 @@ const BASE_URL = 'https://api.weatherapi.com/v1';
 export const weatherService = {
   async getWeatherByLocation(location: string): Promise<WeatherData> {
     try {
-      // The WeatherAPI can handle zip codes, city names, and "city, state" format
+      // Get current weather and forecast with realtime updates
       const response = await fetch(
-        `${BASE_URL}/forecast.json?key=${API_KEY}&q=${encodeURIComponent(location)}&days=1&aqi=no&alerts=no`
+        `${BASE_URL}/forecast.json?key=${API_KEY}&q=${encodeURIComponent(location)}&days=1&aqi=no&alerts=no&realtime=yes`
       );
       
       if (!response.ok) {
@@ -23,6 +24,11 @@ export const weatherService = {
       const locationData = data.location;
       const forecast = data.forecast.forecastday[0];
 
+      // Use current precipitation data more accurately
+      const currentPrecipitation = current.precip_in > 0 ? 
+        Math.round(current.precip_in * 100) : 
+        (current.condition.text.toLowerCase().includes('rain') ? 80 : 0);
+
       return {
         location: `${locationData.name}, ${locationData.region}`,
         temperature: Math.round(current.temp_f),
@@ -30,8 +36,8 @@ export const weatherService = {
         humidity: current.humidity,
         windSpeed: Math.round(current.wind_mph),
         uvIndex: current.uv || 0,
-        precipitation: Math.round(current.precip_in * 100) || 0,
-        hourlyForecast: this.generateHourlyFromForecast(forecast.hour)
+        precipitation: currentPrecipitation,
+        hourlyForecast: this.generateHourlyFromForecast(forecast.hour, current)
       };
     } catch (error) {
       console.error('Weather fetch error:', error);
@@ -53,6 +59,12 @@ export const weatherService = {
     if (lowerCondition.includes('rain') || lowerCondition.includes('drizzle') || lowerCondition.includes('shower')) {
       return 'rainy';
     }
+    if (lowerCondition.includes('thunder') || lowerCondition.includes('storm')) {
+      return 'thunderstorm';
+    }
+    if (lowerCondition.includes('snow') || lowerCondition.includes('blizzard')) {
+      return 'snow';
+    }
     if (lowerCondition.includes('cloud') || lowerCondition.includes('overcast')) {
       return 'cloudy';
     }
@@ -63,18 +75,28 @@ export const weatherService = {
     return 'partly-cloudy';
   },
 
-  generateHourlyFromForecast(hourlyData: any[]) {
+  generateHourlyFromForecast(hourlyData: any[], currentWeather: any) {
     if (!hourlyData || !Array.isArray(hourlyData)) {
       return this.generateMockHourlyForecast();
     }
 
-    return hourlyData.map((hour: any) => {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    return hourlyData.map((hour: any, index: number) => {
       const date = new Date(hour.time);
+      const hourTime = date.getHours();
+      
+      // Use current weather data for the current hour if available
+      const isCurrentHour = hourTime === currentHour;
+      
       return {
-        time: date.getHours(),
-        temperature: Math.round(hour.temp_f),
-        condition: this.mapWeatherCondition(hour.condition.text),
-        precipitation: Math.round(hour.chance_of_rain) || 0
+        time: hourTime,
+        temperature: isCurrentHour ? Math.round(currentWeather.temp_f) : Math.round(hour.temp_f),
+        condition: this.mapWeatherCondition(isCurrentHour ? currentWeather.condition.text : hour.condition.text),
+        precipitation: isCurrentHour ? 
+          (currentWeather.precip_in > 0 ? Math.round(currentWeather.precip_in * 100) : Math.round(hour.chance_of_rain)) :
+          Math.round(hour.chance_of_rain) || 0
       };
     });
   },

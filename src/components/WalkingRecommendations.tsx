@@ -25,74 +25,72 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
   };
 
   const getWeatherIcon = (condition: string, precipitation: number) => {
-    if (precipitation > 50) {
-      return <CloudRain className="h-5 w-5 text-blue-500" />;
+    // Prioritize precipitation over base condition
+    if (precipitation > 70) {
+      return <CloudRain className="h-5 w-5 text-blue-600 dark:text-blue-400" />;
+    }
+    if (precipitation > 40) {
+      return <CloudRain className="h-5 w-5 text-blue-500 dark:text-blue-300" />;
+    }
+    if (precipitation > 15) {
+      return <CloudSun className="h-5 w-5 text-gray-500 dark:text-gray-400" />;
     }
     
+    // Base condition icons
     switch (condition.toLowerCase()) {
       case 'sunny':
-        return <Sun className="h-5 w-5 text-yellow-500" />;
+      case 'clear':
+        return <Sun className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />;
       case 'partly-cloudy':
-        return <CloudSun className="h-5 w-5 text-yellow-400" />;
+      case 'partly cloudy':
+        return <CloudSun className="h-5 w-5 text-yellow-400 dark:text-yellow-300" />;
       case 'cloudy':
-        return <Cloudy className="h-5 w-5 text-gray-500" />;
+      case 'overcast':
+        return <Cloudy className="h-5 w-5 text-gray-500 dark:text-gray-400" />;
       case 'rainy':
-        return <CloudRain className="h-5 w-5 text-blue-500" />;
+      case 'rain':
+        return <CloudRain className="h-5 w-5 text-blue-500 dark:text-blue-400" />;
       case 'snow':
-        return <CloudSnow className="h-5 w-5 text-blue-300" />;
+      case 'snowy':
+        return <CloudSnow className="h-5 w-5 text-blue-300 dark:text-blue-200" />;
       case 'thunderstorm':
-        return <Zap className="h-5 w-5 text-purple-500" />;
+      case 'storm':
+        return <Zap className="h-5 w-5 text-purple-500 dark:text-purple-400" />;
       default:
-        return <Sun className="h-5 w-5 text-yellow-500" />;
+        return <Sun className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />;
     }
   };
 
-  // Generate weather summary
+  // Generate comprehensive weather summary
   const getWeatherSummary = () => {
     const avgTemp = Math.round(weatherData.hourlyForecast.reduce((sum, hour) => sum + hour.temperature, 0) / weatherData.hourlyForecast.length);
     const maxPrecipitation = Math.max(...weatherData.hourlyForecast.map(h => h.precipitation));
     const hotHours = weatherData.hourlyForecast.filter(h => h.temperature > 80);
+    const coldHours = weatherData.hourlyForecast.filter(h => h.temperature < 35);
     
-    let summary = `Today's forecast: ${avgTemp}°F average with `;
+    let summary = `Today's forecast: ${avgTemp}°F average`;
     
-    if (maxPrecipitation > 60) {
-      summary += "heavy rain expected ☔";
-    } else if (maxPrecipitation > 30) {
-      summary += "possible showers 🌧️";
-    } else if (maxPrecipitation > 10) {
-      summary += "light rain possible ⛅";
+    // Weather conditions
+    if (maxPrecipitation > 70) {
+      summary += " with heavy rain expected all day ☔ - Perfect for indoor playtime or bring that umbrella and waterproof gear!";
+    } else if (maxPrecipitation > 40) {
+      summary += " with rain showers throughout the day 🌧️ - Pack an umbrella and maybe plan shorter walks between downpours!";
+    } else if (maxPrecipitation > 15) {
+      summary += " with possible light showers ⛅ - Might want to grab an umbrella just in case for those outdoor adventures!";
     } else {
-      summary += "mostly dry conditions ☀️";
+      summary += " with mostly dry conditions ☀️";
     }
     
-    // Add walking advice
+    // Temperature-based walking advice
     if (hotHours.length > 4) {
-      summary += ". Avoid midday walks due to heat - early morning and evening are best! 🐕";
-    } else if (weatherData.temperature < 32) {
-      summary += ". Bundle up your pup for chilly walks! 🧥";
-    } else {
-      summary += ". Great day for adventures with your furry friend! 🎾";
+      summary += " Hot day ahead - avoid midday walks and stick to early morning or evening adventures! 🐕‍🦺";
+    } else if (coldHours.length > 2) {
+      summary += " Chilly day - bundle up your pup with a cozy jacket for those walks! 🧥";
+    } else if (maxPrecipitation <= 15) {
+      summary += " Great day for long adventures with your furry friend! 🎾";
     }
     
     return summary;
-  };
-
-  // Check for rain warnings
-  const hasRainWarnings = recommendations.some(rec => 
-    rec.reason.toLowerCase().includes('rain') || 
-    weatherData.hourlyForecast.some(hour => hour.precipitation > 30)
-  );
-
-  const getRainMessage = () => {
-    const maxPrecipitation = Math.max(...weatherData.hourlyForecast.map(h => h.precipitation));
-    if (maxPrecipitation > 60) {
-      return "☔ Looks like heavy rain is expected! Your pup might prefer indoor playtime today. If you must go out, bring that umbrella and maybe some paw protection!";
-    } else if (maxPrecipitation > 30) {
-      return "🌧️ There's a good chance of rain today! Pack an umbrella and maybe keep walks shorter. Your furry friend will thank you for staying dry!";
-    } else if (maxPrecipitation > 10) {
-      return "⛅ Light rain possible - might want to grab an umbrella just in case. Perfect weather for a quick adventure with your pup!";
-    }
-    return null;
   };
 
   return (
@@ -101,24 +99,12 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
         🐕 Best Walking Times Today
       </h2>
       
-      {/* Weather Summary */}
+      {/* Comprehensive Weather Summary */}
       <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
         <p className="text-blue-800 dark:text-blue-300 font-medium text-center">
           {getWeatherSummary()}
         </p>
       </div>
-      
-      {/* Rain Warning */}
-      {hasRainWarnings && getRainMessage() && (
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <div className="flex items-center gap-3">
-            <Umbrella className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <p className="text-blue-800 dark:text-blue-300 font-medium">
-              {getRainMessage()}
-            </p>
-          </div>
-        </div>
-      )}
       
       {/* Score Legend */}
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
