@@ -96,7 +96,9 @@ export const weatherService = {
         condition: this.mapWeatherCondition(isCurrentHour ? currentWeather.condition.text : hour.condition.text),
         precipitation: isCurrentHour ? 
           (currentWeather.precip_in > 0 ? Math.round(currentWeather.precip_in * 100) : Math.round(hour.chance_of_rain)) :
-          Math.round(hour.chance_of_rain) || 0
+          Math.round(hour.chance_of_rain) || 0,
+        uvIndex: isCurrentHour ? currentWeather.uv : (hour.uv || 0),
+        windSpeed: isCurrentHour ? Math.round(currentWeather.wind_mph) : Math.round(hour.wind_mph)
       };
     });
   },
@@ -111,7 +113,9 @@ export const weatherService = {
         time: hour.getHours(),
         temperature: Math.floor(Math.random() * 20) + 50,
         condition: ['sunny', 'cloudy', 'partly-cloudy'][Math.floor(Math.random() * 3)],
-        precipitation: Math.random() > 0.8 ? Math.floor(Math.random() * 20) : 0
+        precipitation: Math.random() > 0.8 ? Math.floor(Math.random() * 20) : 0,
+        uvIndex: Math.floor(Math.random() * 10),
+        windSpeed: Math.floor(Math.random() * 15) + 5
       });
     }
     

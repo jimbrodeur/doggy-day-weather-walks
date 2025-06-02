@@ -2,7 +2,7 @@
 import React from 'react';
 import { WeatherData, WalkingRecommendation } from '@/types/weather';
 import { generateWalkingRecommendations } from '@/utils/walkingLogic';
-import { Umbrella, CloudSun, CloudRain, Sun, Cloudy, CloudSnow, Zap } from 'lucide-react';
+import { Umbrella, CloudSun, CloudRain, Sun, Cloudy, CloudSnow, Zap, Wind, Eye } from 'lucide-react';
 
 interface WalkingRecommendationsProps {
   weatherData: WeatherData;
@@ -127,27 +127,50 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
       
       <div className="space-y-4">
         {recommendations.map((rec, index) => {
-          const hourData = weatherData.hourlyForecast[index] || { precipitation: 0, condition: weatherData.condition };
+          const hourData = rec.hourlyData || { 
+            precipitation: 0, 
+            condition: weatherData.condition,
+            temperature: weatherData.temperature,
+            uvIndex: weatherData.uvIndex,
+            windSpeed: weatherData.windSpeed
+          };
+          
           return (
             <div 
               key={index}
               className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${getScoreColor(rec.score)}`}
             >
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   {getWeatherIcon(hourData.condition || weatherData.condition, hourData.precipitation)}
                   <span className="text-lg font-semibold">{rec.time}</span>
-                  {hourData.precipitation > 20 && (
-                    <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
-                      {hourData.precipitation}% rain
-                    </span>
-                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold">{rec.score}</div>
                   <div className="text-xs font-medium">{getScoreLabel(rec.score)}</div>
                 </div>
               </div>
+              
+              {/* Weather details grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-sm">
+                <div className="flex items-center gap-1">
+                  <span className="text-orange-500">🌡️</span>
+                  <span className="font-medium">{hourData.temperature}°F</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Umbrella className="h-4 w-4 text-blue-500" />
+                  <span className="font-medium">{hourData.precipitation}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Eye className="h-4 w-4 text-purple-500" />
+                  <span className="font-medium">UV {hourData.uvIndex || weatherData.uvIndex}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Wind className="h-4 w-4 text-gray-500" />
+                  <span className="font-medium">{hourData.windSpeed || weatherData.windSpeed} mph</span>
+                </div>
+              </div>
+              
               <p className="text-sm opacity-90">{rec.reason}</p>
             </div>
           );

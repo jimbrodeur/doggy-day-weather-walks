@@ -15,6 +15,8 @@ export interface HourlyForecast {
   temperature: number;
   condition: string;
   precipitation: number;
+  uvIndex?: number;
+  windSpeed?: number;
 }
 
 export interface WalkingRecommendation {
@@ -22,4 +24,5 @@ export interface WalkingRecommendation {
   score: number;
   reason: string;
   icon: string;
+  hourlyData?: HourlyForecast;
 }

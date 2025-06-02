@@ -76,7 +76,8 @@ export const generateWalkingRecommendations = (weatherData: WeatherData): Walkin
       time: slot.time,
       score: Math.round(score),
       reason: reasons.join('. '),
-      icon: slot.icon
+      icon: slot.icon,
+      hourlyData: hourlyData // Add the hourly data to the recommendation
     });
   });
 
