@@ -37,8 +37,8 @@ export const weatherService = {
         uvIndex: current.uv || 0,
         precipitation: currentPrecipitation,
         hourlyForecast: this.generateHourlyFromForecast(forecast.hour, current),
-        sunrise: forecast.astro?.sunrise ? this.parseTimeToDate(forecast.astro.sunrise) : undefined,
-        sunset: forecast.astro?.sunset ? this.parseTimeToDate(forecast.astro.sunset) : undefined
+        sunrise: forecast.astro?.sunrise || undefined,
+        sunset: forecast.astro?.sunset || undefined
       };
     } catch (error) {
       console.error('Weather fetch error:', error);
