@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 interface DogProfileProps {
   zipCode?: string;
+  onDogsUpdate?: (dogs: DogEntry[]) => void;
 }
 
 interface DogEntry {
@@ -17,7 +18,7 @@ interface DogEntry {
   zip_code?: string;
 }
 
-export const DogProfile: React.FC<DogProfileProps> = ({ zipCode }) => {
+export const DogProfile: React.FC<DogProfileProps> = ({ zipCode, onDogsUpdate }) => {
   const [dogEntries, setDogEntries] = useState<DogEntry[]>([]);
   const [newDogName, setNewDogName] = useState('');
   const [editingDog, setEditingDog] = useState<DogEntry | null>(null);
@@ -46,6 +47,11 @@ export const DogProfile: React.FC<DogProfileProps> = ({ zipCode }) => {
       // Filter out entries with empty dog names
       const entries = data?.filter(entry => entry.dog_name && entry.dog_name.trim()) || [];
       setDogEntries(entries);
+      
+      // Notify parent component of the updated dogs
+      if (onDogsUpdate) {
+        onDogsUpdate(entries);
+      }
     } catch (error) {
       console.error('Error fetching dog entries:', error);
     }

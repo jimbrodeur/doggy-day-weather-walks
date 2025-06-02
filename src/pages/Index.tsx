@@ -11,16 +11,32 @@ import AuthButton from '@/components/AuthButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
+interface DogEntry {
+  id: string;
+  dog_name: string;
+  zip_code?: string;
+}
+
 const Index = () => {
   const [location, setLocation] = useState('');
+  const [dogEntries, setDogEntries] = useState<DogEntry[]>([]);
   const { weatherData, loading, error, fetchWeather } = useWeatherData();
   const { user } = useAuth();
 
-  // Load user's saved zip code when they log in
+  // Load user's saved zip code and dogs when they log in
   useEffect(() => {
-    const loadUserLocation = async () => {
+    const loadUserData = async () => {
       if (user) {
         try {
+          // Load dog entries
+          const { data: dogData } = await supabase
+            .from('user_table')
+            .select('id, dog_name, zip_code')
+            .eq('user_id', user.id);
+
+          const entries = dogData?.filter(entry => entry.dog_name && entry.dog_name.trim()) || [];
+          setDogEntries(entries);
+
           // First try to get their home location
           const { data: homeLocation } = await supabase
             .from('saved_locations')
@@ -47,12 +63,12 @@ const Index = () => {
             fetchWeather(userData.zip_code);
           }
         } catch (error) {
-          console.error('Error loading user location:', error);
+          console.error('Error loading user data:', error);
         }
       }
     };
 
-    loadUserLocation();
+    loadUserData();
   }, [user]);
 
   const handleLocationSubmit = (loc: string) => {
@@ -60,18 +76,31 @@ const Index = () => {
     fetchWeather(loc);
   };
 
+  const getHeaderText = () => {
+    if (!user || dogEntries.length === 0) {
+      return "🐕 Pup Walk Weather 🌤️";
+    }
+    
+    if (dogEntries.length === 1) {
+      return `🐕 Welcome ${dogEntries[0].dog_name}! 🌤️`;
+    }
+    
+    // Multiple dogs - show first one or could be customized further
+    return `🐕 Welcome ${dogEntries[0].dog_name} & friends! 🌤️`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-start mb-4">
-          {user && <DogProfile zipCode={location} />}
+          {user && <DogProfile zipCode={location} onDogsUpdate={setDogEntries} />}
           <div className="flex-1"></div>
           <AuthButton />
         </div>
         
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-200 mb-4">
-            🐕 Pup Walk Weather 🌤️
+            {getHeaderText()}
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Enter your zip code or city to get personalized recommendations for the best times to walk your furry friend today!
