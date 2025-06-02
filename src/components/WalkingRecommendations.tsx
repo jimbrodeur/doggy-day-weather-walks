@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { WeatherData, WalkingRecommendation } from '@/types/weather';
 import { generateWalkingRecommendations } from '@/utils/walkingLogic';
-import { Umbrella, CloudSun, CloudRain, Sun, Cloudy, CloudSnow, Zap, Wind, Eye } from 'lucide-react';
+import { Umbrella, CloudSun, CloudRain, Sun, Cloudy, CloudSnow, Zap, Wind, Eye, Sunrise, Sunset } from 'lucide-react';
 
 interface WalkingRecommendationsProps {
   weatherData: WeatherData;
@@ -143,7 +142,21 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   {getWeatherIcon(hourData.condition || weatherData.condition, hourData.precipitation)}
-                  <span className="text-lg font-semibold">{rec.time}</span>
+                  <div>
+                    <span className="text-lg font-semibold">{rec.time}</span>
+                    {rec.sunEvent && (
+                      <div className="flex items-center gap-1 mt-1">
+                        {rec.sunEvent.type === 'sunrise' ? (
+                          <Sunrise className="h-4 w-4 text-orange-500" />
+                        ) : (
+                          <Sunset className="h-4 w-4 text-orange-600" />
+                        )}
+                        <span className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                          {rec.sunEvent.type === 'sunrise' ? 'Sunrise' : 'Sunset'} {rec.sunEvent.time}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold">{rec.score}</div>
@@ -178,7 +191,7 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
       </div>
       
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">💡 Pro Tips for Dog Walking:</h3>
+        <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">💡 Pro Tips for Dog walking:</h3>
         <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
           <li>• Bring water for both you and your pup on hot days</li>
           <li>• Check pavement temperature with your hand before walks</li>

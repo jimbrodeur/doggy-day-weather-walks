@@ -8,6 +8,8 @@ export interface WeatherData {
   uvIndex: number;
   precipitation: number;
   hourlyForecast: HourlyForecast[];
+  sunrise?: string;
+  sunset?: string;
 }
 
 export interface HourlyForecast {
@@ -25,4 +27,8 @@ export interface WalkingRecommendation {
   reason: string;
   icon: string;
   hourlyData?: HourlyForecast;
+  sunEvent?: {
+    type: 'sunrise' | 'sunset';
+    time: string;
+  };
 }

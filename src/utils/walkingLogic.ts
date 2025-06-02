@@ -13,6 +13,10 @@ export const generateWalkingRecommendations = (weatherData: WeatherData): Walkin
     { time: 'Night (8-10 PM)', hour: 21, icon: '🌙' }
   ];
 
+  // Get sunrise and sunset times from weather data
+  const sunrise = weatherData.sunrise ? new Date(weatherData.sunrise) : null;
+  const sunset = weatherData.sunset ? new Date(weatherData.sunset) : null;
+
   timeSlots.forEach(slot => {
     const hourlyData = weatherData.hourlyForecast.find(h => h.time === slot.hour) || 
                       weatherData.hourlyForecast[0]; // fallback to current data
@@ -72,12 +76,37 @@ export const generateWalkingRecommendations = (weatherData: WeatherData): Walkin
 
     score = Math.max(0, Math.min(100, score));
 
+    // Check if this time slot includes sunrise or sunset
+    let sunEvent = null;
+    if (sunrise && slot.hour >= 6 && slot.hour <= 8) {
+      const sunriseHour = sunrise.getHours();
+      const sunriseMinute = sunrise.getMinutes();
+      if (sunriseHour >= 6 && sunriseHour <= 8) {
+        sunEvent = {
+          type: 'sunrise',
+          time: `${sunriseHour}:${sunriseMinute.toString().padStart(2, '0')}`
+        };
+      }
+    }
+    
+    if (sunset && slot.hour >= 17 && slot.hour <= 21) {
+      const sunsetHour = sunset.getHours();
+      const sunsetMinute = sunset.getMinutes();
+      if (sunsetHour >= 17 && sunsetHour <= 21) {
+        sunEvent = {
+          type: 'sunset',
+          time: `${sunsetHour}:${sunsetMinute.toString().padStart(2, '0')}`
+        };
+      }
+    }
+
     recommendations.push({
       time: slot.time,
       score: Math.round(score),
       reason: reasons.join('. '),
       icon: slot.icon,
-      hourlyData: hourlyData // Add the hourly data to the recommendation
+      hourlyData: hourlyData,
+      sunEvent: sunEvent
     });
   });
 

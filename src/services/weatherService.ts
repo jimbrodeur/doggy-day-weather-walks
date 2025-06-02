@@ -1,4 +1,3 @@
-
 import { WeatherData } from '@/types/weather';
 
 const API_KEY = '31256404362c4ef5b51180059253005';
@@ -37,7 +36,9 @@ export const weatherService = {
         windSpeed: Math.round(current.wind_mph),
         uvIndex: current.uv || 0,
         precipitation: currentPrecipitation,
-        hourlyForecast: this.generateHourlyFromForecast(forecast.hour, current)
+        hourlyForecast: this.generateHourlyFromForecast(forecast.hour, current),
+        sunrise: forecast.astro?.sunrise ? this.parseTimeToDate(forecast.astro.sunrise) : undefined,
+        sunset: forecast.astro?.sunset ? this.parseTimeToDate(forecast.astro.sunset) : undefined
       };
     } catch (error) {
       console.error('Weather fetch error:', error);
@@ -48,6 +49,23 @@ export const weatherService = {
   // Keep the old method for backward compatibility
   async getWeatherByZip(zipCode: string): Promise<WeatherData> {
     return this.getWeatherByLocation(zipCode);
+  },
+
+  parseTimeToDate(timeString: string): string {
+    // Convert "06:30 AM" or "06:30 PM" format to ISO string
+    const today = new Date();
+    const [time, period] = timeString.split(' ');
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    let hour24 = hours;
+    if (period === 'PM' && hours !== 12) {
+      hour24 += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hour24 = 0;
+    }
+    
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour24, minutes);
+    return date.toISOString();
   },
 
   mapWeatherCondition(condition: string): string {
