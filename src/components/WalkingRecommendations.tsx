@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { WeatherData, WalkingRecommendation } from '@/types/weather';
 import { generateWalkingRecommendations } from '@/utils/walkingLogic';
-import { Umbrella, CloudSun, CloudRain, Sun, Cloudy, CloudSnow, Zap, Wind, Eye, Sunrise, Sunset } from 'lucide-react';
+import { Umbrella, CloudSun, CloudRain, Sun, Cloudy, CloudSnow, Zap, Wind, Eye, Sunrise, Sunset, ExternalLink } from 'lucide-react';
 
 interface WalkingRecommendationsProps {
   weatherData: WeatherData;
@@ -104,6 +105,13 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
           {getWeatherSummary()}
         </p>
       </div>
+
+      {/* Weather Disclaimer */}
+      <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+        <p className="text-amber-800 dark:text-amber-300 text-sm text-center">
+          ⚠️ <strong>Important:</strong> Weather data may not be completely accurate for your specific area. Some dogs can be more sensitive to weather conditions depending on their age, breed, size, and health. Please use your best judgment and consult with your veterinarian if you have concerns about your dog's ability to handle certain weather conditions.
+        </p>
+      </div>
       
       {/* Score Legend */}
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
@@ -198,6 +206,25 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
           <li>• Consider shorter walks during extreme weather</li>
           <li>• Early morning and evening are usually best for dogs</li>
         </ul>
+      </div>
+
+      {/* Powered by Supabase */}
+      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <span>Powered by</span>
+          <a 
+            href="https://supabase.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-green-600 dark:text-green-400">
+              <path d="M21.362 9.354H12.52l-.76-1.52a.5.5 0 0 0-.9 0l-.76 1.52H1.638a.5.5 0 0 0-.447.724L7.447 20.17a.5.5 0 0 0 .894 0l6.256-10.092a.5.5 0 0 0-.447-.724ZM21.362 14.646H12.52l-.76 1.52a.5.5 0 0 1-.9 0l-.76-1.52H1.638a.5.5 0 0 1-.447-.724L7.447 3.83a.5.5 0 0 1 .894 0l6.256 10.092a.5.5 0 0 1-.447.724Z"/>
+            </svg>
+            <span className="font-medium">Supabase</span>
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
       </div>
     </div>
   );
