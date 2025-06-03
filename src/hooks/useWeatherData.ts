@@ -8,12 +8,12 @@ export const useWeatherData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchWeather = async (location: string) => {
+  const fetchWeather = async (location: string, date?: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      const data = await weatherService.getWeatherByLocation(location);
+      const data = await weatherService.getWeatherByLocation(location, date);
       setWeatherData(data);
     } catch (err) {
       setError('Unable to fetch weather data. Please check your location and try again.');

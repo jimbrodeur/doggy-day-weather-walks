@@ -6,6 +6,7 @@ import { WalkingRecommendations } from '@/components/WalkingRecommendations';
 import { CommentsSection } from '@/components/CommentsSection';
 import { DogProfile } from '@/components/DogProfile';
 import { SavedLocations } from '@/components/SavedLocations';
+import { DateSelector } from '@/components/DateSelector';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import AuthButton from '@/components/AuthButton';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +20,7 @@ interface DogEntry {
 
 const Index = () => {
   const [location, setLocation] = useState('');
+  const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
   const [dogEntries, setDogEntries] = useState<DogEntry[]>([]);
   const { weatherData, loading, error, fetchWeather } = useWeatherData();
   const { user } = useAuth();
@@ -47,7 +49,7 @@ const Index = () => {
 
           if (homeLocation) {
             setLocation(homeLocation.location);
-            fetchWeather(homeLocation.location);
+            fetchWeather(homeLocation.location, selectedDate);
             return;
           }
 
@@ -60,7 +62,7 @@ const Index = () => {
 
           if (userData?.zip_code) {
             setLocation(userData.zip_code);
-            fetchWeather(userData.zip_code);
+            fetchWeather(userData.zip_code, selectedDate);
           }
         } catch (error) {
           console.error('Error loading user data:', error);
@@ -73,7 +75,14 @@ const Index = () => {
 
   const handleLocationSubmit = (loc: string) => {
     setLocation(loc);
-    fetchWeather(loc);
+    fetchWeather(loc, selectedDate);
+  };
+
+  const handleDateChange = (date: string | undefined) => {
+    setSelectedDate(date);
+    if (location) {
+      fetchWeather(location, date);
+    }
   };
 
   const getHeaderText = () => {
@@ -87,6 +96,16 @@ const Index = () => {
     
     // Multiple dogs - show first one or could be customized further
     return `🐕 Welcome ${dogEntries[0].dog_name} & friends! 🌤️`;
+  };
+
+  const getDateLabel = () => {
+    if (!selectedDate) return "Today";
+    
+    const date = new Date(selectedDate);
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const monthDay = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    
+    return `${dayName}, ${monthDay}`;
   };
 
   return (
@@ -103,7 +122,7 @@ const Index = () => {
             {getHeaderText()}
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Enter your zip code or city to get personalized recommendations for the best times to walk your furry friend today!
+            Enter your zip code or city to get personalized recommendations for the best times to walk your furry friend!
           </p>
         </div>
 
@@ -117,6 +136,11 @@ const Index = () => {
           
           <WeatherInput onSubmit={handleLocationSubmit} loading={loading} />
           
+          <DateSelector 
+            onDateChange={handleDateChange}
+            selectedDate={selectedDate}
+          />
+          
           {error && (
             <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-center">
               {error}
@@ -125,6 +149,11 @@ const Index = () => {
 
           {weatherData && (
             <div className="mt-8 space-y-6">
+              <div className="text-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                  Forecast for {getDateLabel()}
+                </h2>
+              </div>
               <WeatherDisplay weatherData={weatherData} />
               <WalkingRecommendations weatherData={weatherData} />
               <CommentsSection zipCode={location} />
