@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { WeatherData } from '@/types/weather';
 import { CloudSun, CloudRain, Sun, Cloudy } from 'lucide-react';
@@ -32,7 +31,10 @@ export const WeatherDisplay: React.FC<WeatherDisplayProps> = ({ weatherData, sel
 
   const getWeatherTitle = () => {
     if (!selectedDate) {
-      return `Current Weather in ${weatherData.location}`;
+      const today = new Date();
+      const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+      const monthDay = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      return `Current Weather for ${dayName}, ${monthDay} in ${weatherData.location}`;
     }
     
     const date = new Date(selectedDate);
