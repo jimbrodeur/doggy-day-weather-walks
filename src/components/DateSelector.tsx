@@ -13,9 +13,9 @@ export const DateSelector: React.FC<DateSelectorProps> = ({ onDateChange, select
     const options = [];
     const today = new Date();
     
-    // Add "Today" option
+    // Add "Today" option with 'today' as value instead of empty string
     options.push({
-      value: '',
+      value: 'today',
       label: 'Today',
       date: today.toDateString()
     });
@@ -40,11 +40,23 @@ export const DateSelector: React.FC<DateSelectorProps> = ({ onDateChange, select
 
   const dateOptions = generateDateOptions();
 
+  const handleValueChange = (value: string) => {
+    // Convert 'today' back to undefined for the parent component
+    if (value === 'today') {
+      onDateChange(undefined);
+    } else {
+      onDateChange(value);
+    }
+  };
+
+  // Convert selectedDate for display - if undefined, show 'today'
+  const displayValue = selectedDate === undefined ? 'today' : selectedDate;
+
   return (
     <div className="w-full max-w-xs mx-auto mb-4">
       <Select 
-        value={selectedDate || ''} 
-        onValueChange={(value) => onDateChange(value || undefined)}
+        value={displayValue} 
+        onValueChange={handleValueChange}
       >
         <SelectTrigger className="w-full">
           <div className="flex items-center gap-2">
