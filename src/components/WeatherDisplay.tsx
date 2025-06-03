@@ -5,9 +5,10 @@ import { CloudSun, CloudRain, Sun, Cloudy } from 'lucide-react';
 
 interface WeatherDisplayProps {
   weatherData: WeatherData;
+  selectedDate?: string;
 }
 
-export const WeatherDisplay: React.FC<WeatherDisplayProps> = ({ weatherData }) => {
+export const WeatherDisplay: React.FC<WeatherDisplayProps> = ({ weatherData, selectedDate }) => {
   const getWeatherIcon = (condition: string) => {
     switch (condition.toLowerCase()) {
       case 'sunny':
@@ -29,10 +30,22 @@ export const WeatherDisplay: React.FC<WeatherDisplayProps> = ({ weatherData }) =
     ).join(' ');
   };
 
+  const getWeatherTitle = () => {
+    if (!selectedDate) {
+      return `Current Weather in ${weatherData.location}`;
+    }
+    
+    const date = new Date(selectedDate);
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const monthDay = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    
+    return `Weather for ${dayName}, ${monthDay} in ${weatherData.location}`;
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
       <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">
-        Current Weather in {weatherData.location}
+        {getWeatherTitle()}
       </h2>
       
       <div className="flex flex-col md:flex-row items-center justify-center gap-6">

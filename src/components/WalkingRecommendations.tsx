@@ -6,9 +6,10 @@ import { Umbrella, CloudSun, CloudRain, Sun, Cloudy, CloudSnow, Zap, Wind, Eye, 
 
 interface WalkingRecommendationsProps {
   weatherData: WeatherData;
+  selectedDate?: string;
 }
 
-export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ weatherData }) => {
+export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ weatherData, selectedDate }) => {
   const recommendations = generateWalkingRecommendations(weatherData);
   
   const getScoreColor = (score: number) => {
@@ -68,7 +69,13 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
     const hotHours = weatherData.hourlyForecast.filter(h => h.temperature > 80);
     const coldHours = weatherData.hourlyForecast.filter(h => h.temperature < 35);
     
-    let summary = `Today's forecast: ${avgTemp}°F average`;
+    const dateLabel = selectedDate ? (() => {
+      const date = new Date(selectedDate);
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+      return `${dayName}'s`;
+    })() : "Today's";
+    
+    let summary = `${dateLabel} forecast: ${avgTemp}°F average`;
     
     // Weather conditions
     if (maxPrecipitation > 70) {
@@ -93,10 +100,20 @@ export const WalkingRecommendations: React.FC<WalkingRecommendationsProps> = ({ 
     return summary;
   };
 
+  const getWalkingTimesTitle = () => {
+    if (!selectedDate) {
+      return "🐕 Best Walking Times Today";
+    }
+    
+    const date = new Date(selectedDate);
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+    return `🐕 Best Walking Times for ${dayName}`;
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
       <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">
-        🐕 Best Walking Times Today
+        {getWalkingTimesTitle()}
       </h2>
       
       {/* Comprehensive Weather Summary */}

@@ -154,8 +154,8 @@ const Index = () => {
                   Forecast for {getDateLabel()}
                 </h2>
               </div>
-              <WeatherDisplay weatherData={weatherData} />
-              <WalkingRecommendations weatherData={weatherData} />
+              <WeatherDisplay weatherData={weatherData} selectedDate={selectedDate} />
+              <WalkingRecommendations weatherData={weatherData} selectedDate={selectedDate} />
               <CommentsSection zipCode={location} />
             </div>
           )}
